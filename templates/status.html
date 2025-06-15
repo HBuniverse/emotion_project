@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>나의 상태</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f7cfdc, #cbdff5);
+      text-align: center;
+      padding: 50px;
+    }
+
+    .status-box {
+      background-color: white;
+      padding: 30px;
+      margin: auto;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 400px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .status-box p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      background-color: #ce93d8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 나의 현재 상태</h2>
+  <div class="status-box">
+    <p><strong>사용자:</strong> {{ progress.username }}</p>
+    <p><strong>레벨:</strong> {{ progress.level }}</p>
+    <p><strong>총 경험치:</strong> {{ progress.exp }} EXP</p>
+    <p><strong>최근 감정:</strong> {{ progress.last_emotion or '기록 없음' }}</p>
+    <p><strong>마지막 퀘스트:</strong> {{ progress.last_quest or '기록 없음' }}</p>
+  </div>
+
+  <button class="back-btn" onclick="window.location.href='/'">← 홈으로 돌아가기</button>
+</body>
+</html>

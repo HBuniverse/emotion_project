@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>감정 + 레벨 히스토리</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: linear-gradient(to bottom, #f7cfdc, #cbdff5);
+      text-align: center;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #ce93d8;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      background-color: white;
+      border-radius: 15px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      width: 80vw;     /* 전체 화면 너비의 80% */
+      max-width: 1500px;
+      height: 60vh;     /* 화면 높이의 60% */
+    }
+  </style>
+</head>
+<body>
+  <button class="back-btn" onclick="window.location.href='/'">← 돌아가기</button>
+  <h2>📈 감정 변화 & 레벨 성장 히스토리</h2>
+
+  <div class="chart-container">
+    <canvas id="emotionLevelChart"></canvas>
+  </div>
+
+  <script>
+    const historyData = {{ history_data | tojson }};
+    const labels = historyData.map(d => d.time);
+    const emotionVals = historyData.map(d => d.emotion_val);
+    const levels = historyData.map(d => d.level);
+
+    const emotionNames = ['neutral', 'sadness', 'fear', 'anger', 'joy'];
+
+    new Chart(document.getElementById("emotionLevelChart"), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '감정 (emotion)',
+            data: emotionVals,
+            borderColor: '#f06292',
+            backgroundColor: '#f48fb1',
+            tension: 0.3,
+            yAxisID: 'y1'
+          },
+          {
+            label: '레벨 (level)',
+            data: levels,
+            borderColor: '#64b5f6',
+            backgroundColor: '#90caf9',
+            tension: 0.3,
+            yAxisID: 'y2'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        stacked: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                if (context.dataset.label === '감정 (emotion)') {
+                  return '감정: ' + emotionNames[context.raw];
+                } else {
+                  return '레벨: ' + context.raw;
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          y1: {
+            type: 'linear',
+            position: 'left',
+            title: {
+              display: true,
+              text: '감정 (joy~neutral)'
+            },
+            ticks: {
+              callback: function(value) {
+                return emotionNames[value] || '';
+              },
+              stepSize: 1,
+              min: 0,
+              max: 4
+            }
+          },
+          y2: {
+            type: 'linear',
+            position: 'right',
+            title: {
+              display: true,
+              text: '레벨'
+            },
+            beginAtZero: true,
+            grid: {
+              drawOnChartArea: false
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: '시간'
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

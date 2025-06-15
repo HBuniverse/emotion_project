@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>퀘스트 수행 기록</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #f7cfdc, #cbdff5);
+      padding: 50px;
+      text-align: center;
+    }
+
+    table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 80%;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 20px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #ce93d8;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f3e5f5;
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      background-color: #81c784;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>📜 퀘스트 수행 기록</h2>
+  <table>
+    <tr>
+      <th>날짜 및 시간</th>
+      <th>감정</th>
+      <th>퀘스트</th>
+    </tr>
+    {% for row in history %}
+    <tr>
+      <td>{{ row.timestamp }}</td>
+      <td>{{ row.emotion }}</td>
+      <td>{{ row.quest }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <button class="back-btn" onclick="window.location.href='/'">← 홈으로</button>
+</body>
+</html>
