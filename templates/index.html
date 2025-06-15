@@ -1,1 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>감정 분석 테스트</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <style>
+    * { box-sizing: border-box; }
 
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(to right, #f7cfdc 0%, #cbdff5 100%);
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 50px;
+    }
+
+    #inputSection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    textarea {
+      width: 60%;
+      font-size: 18px;
+      padding: 15px;
+      border-radius: 20px;
+      border: 2px solid #ccc;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      resize: none;
+      outline: none;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #f48fb1;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #ec407a;
+    }
+
+    .back-button, .chart-button, .logout-button {
+      position: fixed;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      color: white;
+      cursor: pointer;
+      z-index: 999;
+    }
+
+    .back-button {
+      top: 20px;
+      left: 20px;
+      background-color: #ce93d8;
+    }
+
+    .chart-button {
+      top: 20px;
+      right: 20px;
+      background-color: #64b5f6;
+    }
+
+    .logout-button {
+      top: 70px;
+      left: 20px;
+      background-color: #ff7043;
+    }
+
+    .status-button {
+      position: fixed;
+      top: 70px;         /* chart-button 아래로 정렬 */
+      right: 20px;       /* 왼쪽 → 오른쪽으로 위치 이동 */
+      background-color: #81c784;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* 예쁜 그림자 유지 */
+      transition: background-color 0.3s ease;
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 50px auto 20px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .card {
+      flex: 1 1 200px;
+      max-width: 220px;
+      padding: 15px;
+      border-radius: 10px;
+      background-color: white;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.07);
+      text-align: left;
+    }
+
+    .media-box {
+      margin: 30px auto;
+      background-color: white;
+      padding: 20px;
+      width: 70%;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .media-box img,
+    .media-box video,
+    .media-box audio {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+
+    .progress-bar {
+      background-color: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      height: 20px;
+      margin-top: 5px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #81d4fa;
+      transition: width 0.3s ease-in-out;
+    }
+
+    .quest-button {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background-color: #9575cd;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+      transition: background-color 0.3s ease;
+    }
+    .quest-button:hover {
+      background-color: #7e57c2;
+    }
+
+  </style>
+</head>
+<body>
+
+  <h2>💬 <strong>오늘의 기분은 어떤가요?</strong></h2>
+
+  <button class="logout-button" onclick="location.href='/logout'">로그아웃</button>
+  <button id="chartButton" class="chart-button" style="display: none;" onclick="location.href='/history'">📊 감정 변화 보기</button>
+  <button id="backButton" class="back-button" style="display: none;" onclick="resetView()">← 다시 감정 분석하기</button>
+  <button class="status-button" onclick="location.href='/status'">📋 상태 보기</button>
+  <button class="quest-button" onclick="location.href='/quest_history'">🗂️ 퀘스트 기록</button>
+
+  <div id="inputSection">
+    <textarea id="inputText" rows="4" placeholder="오늘 하루 어땠나요? 마음속에 남는 일이 있었나요? [예: I felt excited when I met my friends.]"></textarea>
+    <button onclick="analyzeEmotion()">분석하기</button>
+  </div>
+
+  <div id="result" class="card-container" style="display: none;"></div>
+  <div id="mediaArea" class="media-box" style="display: none;"></div>
+
+  <script>
+    async function analyzeEmotion() {
+      const text = document.getElementById("inputText").value;
+      if (!text.trim()) return;
+
+      const response = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      // 뷰 전환
+      document.getElementById("inputSection").style.display = "none";
+      document.getElementById("backButton").style.display = "block";
+      document.getElementById("chartButton").style.display = "block";
+      document.getElementById("result").style.display = "flex";
+      document.getElementById("mediaArea").style.display = "block";
+
+      const characterImage = `/static/${data.character.replaceAll(" ", "_").toLowerCase()}.png`;
+      const expPercent = (data.total_exp % 100);
+
+      document.getElementById("result").innerHTML = `
+        <div class="card"><h4>🧠 감정</h4><p>${data.emotion}</p></div>
+        <div class="card"><h4>🎯 정확도</h4><p>${data.confidence}</p></div>
+        <div class="card"><h4>💬 반응 메시지</h4><p>${data.message}</p></div>
+        <div class="card">
+          <h4>🎤 등장 캐릭터</h4>
+          <img src="${characterImage}" alt="${data.character}" style="width:100%; border-radius:10px;">
+          <p style="margin-top:10px; font-weight:bold;">${data.character}</p>
+        </div>
+        <div class="card">
+          <h4>📌 추천 퀘스트</h4>
+          <p style="font-style: italic;">"${data.quest}"</p>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="${data.link_game}" target="_blank">
+              <button style="background-color: #4CAF50;">🎮 감정 미션 도전!</button>
+            </a>
+            <a href="${data.link_mv}" target="_blank">
+              <button style="background-color: #2196F3;">🎵 뮤직비디오 감상</button>
+            </a>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🧗 경험치 & 레벨</h4>
+          <p>레벨: <strong>${data.level}</strong></p>
+          <p>현재 경험치: ${data.total_exp} / ${(data.level) * 100} EXP</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${expPercent}%"></div>
+          </div>
+        </div>
+      `;
+
+      let media = '';
+      if (data.content.endsWith(".jpg") || data.content.endsWith(".png")) {
+        media = `<img src="/static/${data.content}" alt="감정 이미지">`;
+      } else if (data.content.endsWith(".mp3")) {
+        media = `<audio controls autoplay src="/static/${data.content}"></audio>`;
+      } else if (data.content.endsWith(".mp4")) {
+        media = `<video controls autoplay muted src="/static/${data.content}"></video>`;
+      }
+
+      document.getElementById("mediaArea").innerHTML = `
+        <h3>🎬 관련 콘텐츠</h3>
+        ${media}
+      `;
+    }
+
+    function resetView() {
+      document.getElementById("inputText").value = "";
+      document.getElementById("inputSection").style.display = "flex";
+      document.getElementById("result").style.display = "none";
+      document.getElementById("mediaArea").style.display = "none";
+      document.getElementById("backButton").style.display = "none";
+      document.getElementById("chartButton").style.display = "none";
+    }
+  </script>
+
+</body>
+</html>
